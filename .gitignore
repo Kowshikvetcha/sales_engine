@@ -1,0 +1,42 @@
+# Python environment and caches
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local databases and tests backups
+*.db
+*.db-journal
+*.bak
+test_api.db
+test_scrape.db
+
+# Playwright scraped screenshot files (keep data/ screenshots directory, ignore screenshot images)
+data/screenshots/*.png
+!data/screenshots/.gitkeep
+
+# Node dependencies and bundles
+frontend/node_modules/
+frontend/dist/
+frontend/.eslintcache
+frontend/npm-debug.log*
+
+# Secret tokens and local configurations
+.env
+.env.local
+secrets/gmail_token.json
+
+# IDE settings
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp

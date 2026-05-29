@@ -1,0 +1,6 @@
+name,website,email
+"John Doe",https://example.com,"john@example.com"
+"Jane Smith",http://testsite.org,"jane@testsite.org"
+"Suppressed Lead",https://suppressed.com,"suppressed@suppressed.com"
+"Invalid Email Lead",https://invalid.com,"invalid-email"
+"Missing Web Lead",,"missingweb@example.com"

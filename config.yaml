@@ -1,0 +1,42 @@
+analysis:
+  broken_link_sample: 10
+  pagespeed_strategy: mobile
+  thresholds:
+    load_ms: 4000
+    perf: 50
+    seo: 70
+api:
+  auth_token_required: true
+  cors_origins:
+  - http://localhost:5173
+  host: 127.0.0.1
+  port: 8000
+csv:
+  column_map:
+    email: email
+    name: name
+    website: website
+email:
+  cta: reply to this email
+  physical_address: 123 Main St, Anytown, USA
+  sender_company: Acme Agency
+  sender_name: John Doe
+  unsubscribe_base_url: http://localhost:8000/unsubscribe
+jobs:
+  backend: inprocess
+  max_concurrent_jobs: 1
+scrape:
+  concurrency: 10
+  max_pages: 3
+  max_text_chars: 20000
+  politeness_delay_ms: 1000
+  respect_robots: true
+  timeout_ms: 20000
+send:
+  daily_send_limit: 45
+  dry_run: true
+  per_message_delay_s: 20.0
+  provider: gmail
+  require_human_review: true
+service_map:
+  max_findings: 3
