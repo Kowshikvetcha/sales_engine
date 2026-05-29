@@ -79,6 +79,9 @@ playwright install chromium
    - Add a `PAGESPEED_API_KEY` (Google Cloud Console) to run live Lighthouse performance audits.
    - (Optional) If you plan to dispatch emails via Gmail, place your OAuth credentials file under `secrets/gmail_oauth.json`.
 
+> [!TIP]
+> For detailed instructions on how to acquire each of these API keys, set up Google Cloud OAuth client consent screens, and locate the key files, check out the comprehensive [API Configuration Guide](file:///e:/sales_engine/docs/api_keys_guide.md).
+
 ---
 
 ## 2. Configuration & Compliance Safeguards
