@@ -10,6 +10,11 @@ A premium B2B sales outreach automation system. This application crawls US busin
 - **Frontend:** React / Vite / TypeScript / Tailwind CSS v4 / TanStack Query / Recharts / Lucide Icons
 - **Integrations:** Google PageSpeed Insights API, Gmail API (OAuth 2.0)
 
+> [!NOTE]
+> **Project Documentation Quick Links:**
+> - [Project Guide & File Directory](file:///e:/sales_engine/docs/project_guide.md) – A complete guide explaining what each file in the project does.
+> - [API Keys Setup Guide](file:///e:/sales_engine/docs/api_keys_guide.md) – Configuration instructions for Google PageSpeed, LLMs, and Gmail OAuth.
+
 ---
 
 ## Project Structure
@@ -18,6 +23,10 @@ A premium B2B sales outreach automation system. This application crawls US busin
 ├── config.yaml          # Global non-secret system configurations (timeouts, rules, limits)
 ├── .env.example         # Template for API keys, secret credentials, and auth tokens
 ├── requirements.txt     # Python backend dependencies
+├── docs/
+│   ├── project_guide.md  # Guide explaining what every file in the project does
+│   ├── api_keys_guide.md # Comprehensive API key acquisition and setup guide
+│   └── SALES_AUTOMATION_SPEC.md # Product and system specifications document
 ├── src/
 │   ├── main.py          # Terminal CLI entry point (Typer command suite)
 │   ├── db.py            # SQLite session management and database models
@@ -36,6 +45,7 @@ A premium B2B sales outreach automation system. This application crawls US busin
 │           └── client.ts # Front-end API client wrappers
 └── tests/               # Backend pytest suite (scraping, mapping, audits, send, and api tests)
 ```
+
 
 ---
 
