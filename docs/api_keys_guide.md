@@ -84,7 +84,7 @@ If you plan to toggle off "Simulator Mode" and send real outreach emails through
 1. Rename the downloaded JSON file to `gmail_oauth.json`.
 2. Move it to the **`secrets/`** directory in your project root:
    ```
-   e:/sales_engine/secrets/gmail_oauth.json
+   secrets/gmail_oauth.json
    ```
 
 ### Step 3: Authorize the App

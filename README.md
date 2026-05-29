@@ -12,8 +12,8 @@ A premium B2B sales outreach automation system. This application crawls US busin
 
 > [!NOTE]
 > **Project Documentation Quick Links:**
-> - [Project Guide & File Directory](file:///e:/sales_engine/docs/project_guide.md) – A complete guide explaining what each file in the project does.
-> - [API Keys Setup Guide](file:///e:/sales_engine/docs/api_keys_guide.md) – Configuration instructions for Google PageSpeed, LLMs, and Gmail OAuth.
+> - [Project Guide & File Directory](docs/project_guide.md) – A complete guide explaining what each file in the project does.
+> - [API Keys Setup Guide](docs/api_keys_guide.md) – Configuration instructions for Google PageSpeed, LLMs, and Gmail OAuth.
 
 ---
 
@@ -90,7 +90,7 @@ playwright install chromium
    - (Optional) If you plan to dispatch emails via Gmail, place your OAuth credentials file under `secrets/gmail_oauth.json`.
 
 > [!TIP]
-> For detailed instructions on how to acquire each of these API keys, set up Google Cloud OAuth client consent screens, and locate the key files, check out the comprehensive [API Configuration Guide](file:///e:/sales_engine/docs/api_keys_guide.md).
+> For detailed instructions on how to acquire each of these API keys, set up Google Cloud OAuth client consent screens, and locate the key files, check out the comprehensive [API Configuration Guide](docs/api_keys_guide.md).
 
 ---
 
