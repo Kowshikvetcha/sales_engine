@@ -12,14 +12,14 @@ All secrets must be configured inside the gitignored **`.env`** file located in 
 copy .env.example .env
 ```
 
-| Key Name | API Provider | Purpose | Where to Place |
-| :--- | :--- | :--- | :--- |
-| `API_AUTH_TOKEN` | Local Application | Frontend Client Authentication | `.env` |
-| `ANTHROPIC_API_KEY` | Anthropic | Primary Email Generation (Claude) | `.env` |
-| `OPENAI_API_KEY` | OpenAI | Comparative Email Generation (GPT) | `.env` |
-| `GOOGLE_API_KEY` | Google Gemini | Comparative Email Generation (Gemini) | `.env` |
-| `PAGESPEED_API_KEY` | Google Cloud | Running performance audits on lead sites | `.env` |
-| OAuth client JSON | Google Cloud (Gmail) | Authenticating and dispatching mail | `secrets/gmail_oauth.json` |
+| Key Name | API Provider | Purpose | Where to Place | Pricing / Free Tier |
+| :--- | :--- | :--- | :--- | :--- |
+| `API_AUTH_TOKEN` | Local Application | Frontend Client Authentication | `.env` | **100% Free** (Locally generated) |
+| `ANTHROPIC_API_KEY` | Anthropic | Primary Email Generation (Claude) | `.env` | **Paid** (Requires pre-funded credits; new signups may receive a temporary $5 trial) |
+| `OPENAI_API_KEY` | OpenAI | Comparative Email Generation (GPT) | `.env` | **Paid** (Requires pre-funded credits; no permanent free tier) |
+| `GOOGLE_API_KEY` | Google Gemini | Comparative Email Generation (Gemini) | `.env` | **Free Tier Available** (Up to 15 RPM / 1M TPM in Google AI Studio) |
+| `PAGESPEED_API_KEY` | Google Cloud | Running performance audits on lead sites | `.env` | **100% Free** (Standard usage limits apply with no charge) |
+| OAuth client JSON | Google Cloud (Gmail) | Authenticating and dispatching mail | `secrets/gmail_oauth.json` | **100% Free** (Standard developer tier has no cost) |
 
 ---
 
@@ -27,11 +27,13 @@ copy .env.example .env
 
 ### A. Local Frontend Token (`API_AUTH_TOKEN`)
 - **Purpose:** Restricts access to your local FastAPI backend endpoints.
+- **Cost / Free Tier:** 100% Free (locally generated and validated).
 - **Acquisition:** Define any custom secret string of your choice (e.g., `my-custom-super-secret-key-123`).
 - **Placement:** Set `API_AUTH_TOKEN=your_token` in `.env`.
 
 ### B. Anthropic Claude API (`ANTHROPIC_API_KEY`)
 - **Purpose:** Serves as the primary language model provider for drafting outreach emails.
+- **Cost / Free Tier:** Paid API. Requires configuring billing and pre-funding your account with a minimum of $5. New accounts sometimes receive a temporary $5 trial credit.
 - **Acquisition:**
   1. Visit the [Anthropic Console](https://console.anthropic.com/).
   2. Create an account, load credits, and click on **API Keys**.
@@ -40,6 +42,7 @@ copy .env.example .env
 
 ### C. OpenAI GPT API (`OPENAI_API_KEY`)
 - **Purpose:** Used for model A/B comparison (bake-off runs) and optional email drafting.
+- **Cost / Free Tier:** Paid API. Requires pre-funding your platform account with credits. There is no permanent free tier.
 - **Acquisition:**
   1. Visit the [OpenAI API Platform](https://platform.openai.com/).
   2. Log in, navigate to **API Keys**, and click **Create new secret key**.
@@ -47,6 +50,7 @@ copy .env.example .env
 
 ### D. Google Gemini API (`GOOGLE_API_KEY`)
 - **Purpose:** Used for model A/B comparison (bake-off runs) and optional email drafting.
+- **Cost / Free Tier:** **Generous Free Tier Available** via Google AI Studio. It permits up to 15 Requests Per Minute (RPM) and 1 Million Tokens Per Month (TPM) at no cost. Note: Google may use free tier prompt/response data to train models; upgrade to a paid tier (pay-as-you-go) to prevent data collection.
 - **Acquisition:**
   1. Visit [Google AI Studio](https://aistudio.google.com/).
   2. Click **Get API Key** and select/create a project to generate a key.
@@ -54,6 +58,7 @@ copy .env.example .env
 
 ### E. Google PageSpeed Insights API (`PAGESPEED_API_KEY`)
 - **Purpose:** Runs mobile strategy Lighthouse audits (scores for performance, SEO, accessibility) on B2B target websites.
+- **Cost / Free Tier:** **100% Free**. There is no cost or tier upgrades needed for standard PageSpeed Insights audits.
 - **Acquisition:**
   1. Go to the [Google Cloud Console API Library](https://console.cloud.google.com/apis/library).
   2. Enable the **PageSpeed Insights API** for your project.
