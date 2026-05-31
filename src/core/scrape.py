@@ -170,7 +170,7 @@ async def scrape_single_lead(db: Session, lead_id: int) -> Dict[str, Any]:
             try:
                 # Scrape Homepage
                 timeout = settings.scrape.timeout_ms
-                homepage_response = await page.goto(url, wait_until="networkidle", timeout=timeout)
+                homepage_response = await page.goto(url, wait_until="load", timeout=timeout)
                 http_status = homepage_response.status if homepage_response else 200
                 
                 # Check for error status codes (e.g. 4xx, 5xx)
