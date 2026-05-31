@@ -87,6 +87,31 @@ def check_contact_form(html: str) -> bool:
                 
     return False
 
+def check_ssl_status(url: str) -> tuple[bool, str]:
+    """
+    Checks if a URL has a valid SSL certificate and can negotiate a secure connection.
+    Returns (has_ssl, ssl_error_type)
+    """
+    import socket
+    import ssl
+    
+    if not url.lower().startswith("https"):
+        return False, "served_over_http"
+        
+    try:
+        parsed = urlparse(url)
+        hostname = parsed.hostname
+        if not hostname:
+            return False, "served_over_http"
+            
+        context = ssl.create_default_context()
+        with socket.create_connection((hostname, 443), timeout=5) as sock:
+            with context.wrap_socket(sock, server_hostname=hostname) as ssock:
+                return True, ""
+    except Exception as e:
+        logger.warning("SSL validation failed", url=url, error=str(e))
+        return False, "insecure_https"
+
 async def analyze_single_lead(db: Session, lead_id: int) -> Dict[str, Any]:
     """
     Performs local HTML checks, head checks a sample of links, queries PageSpeed,
@@ -119,8 +144,8 @@ async def analyze_single_lead(db: Session, lead_id: int) -> Dict[str, Any]:
     # Viewport check
     has_viewport = bool(soup.find("meta", attrs={"name": "viewport"}))
     
-    # SSL check (based on URL scheme of successfully scraped lead)
-    has_ssl = lead.website_url.startswith("https")
+    # SSL check (handshake verification)
+    has_ssl, ssl_error_type = check_ssl_status(lead.website_url)
     
     # Analytics check
     has_analytics = check_analytics_tags(html)
@@ -159,6 +184,7 @@ async def analyze_single_lead(db: Session, lead_id: int) -> Dict[str, Any]:
         "mobile_friendly": psi_results["mobile_friendly"],
         "load_time_ms": psi_results["load_time_ms"],
         "has_ssl": has_ssl,
+        "ssl_error_type": ssl_error_type,
         "meta_title_present": meta_title,
         "meta_description_present": meta_desc,
         "has_analytics": has_analytics,

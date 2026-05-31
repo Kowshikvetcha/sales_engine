@@ -37,10 +37,15 @@ def map_signals_to_services(
 
     # 3. SSL check -> Full-stack design
     has_ssl = signals_dict.get("has_ssl")
+    ssl_error_type = signals_dict.get("ssl_error_type")
     if has_ssl is False:
+        if ssl_error_type == "insecure_https":
+            evidence = "Insecure SSL configuration (leads to cipher mismatch/handshake failures in modern browsers)"
+        else:
+            evidence = "No valid SSL certificate (served over HTTP)"
         findings.append((
             "Full-stack design",
-            "No valid SSL certificate (served over HTTP)",
+            evidence,
             "high"
         ))
 
