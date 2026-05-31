@@ -38,6 +38,9 @@ class EmailConfig(BaseModel):
     sender_company: str = ""
     physical_address: str = ""
     unsubscribe_base_url: str = ""
+    provider: str = "anthropic"
+    model: str = "claude-sonnet-4-6"
+    temperature: float = 0.4
 
 class SendConfig(BaseModel):
     provider: str = "gmail"

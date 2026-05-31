@@ -19,12 +19,12 @@ def build_llm(
     If the selected model is not compatible with the selected provider, falls back
     to a default model for that provider.
     """
-    model_provider = provider or settings.llm.default_provider
+    model_provider = provider or (settings.email.provider if hasattr(settings.email, 'provider') else None) or settings.llm.default_provider
     effective_provider = model_provider.lower()
     
     model_name = model
     if not model_name:
-        config_model = settings.llm.default_model
+        config_model = (settings.email.model if hasattr(settings.email, 'model') else None) or settings.llm.default_model
         
         # Check compatibility
         is_anthropic = "claude" in config_model.lower()
@@ -40,7 +40,7 @@ def build_llm(
         else:
             model_name = PROVIDER_DEFAULT_MODELS.get(effective_provider, config_model)
             
-    temp = temperature if temperature is not None else settings.llm.temperature
+    temp = temperature if temperature is not None else ((settings.email.temperature if hasattr(settings.email, 'temperature') and settings.email.temperature is not None else None) or settings.llm.temperature)
     
     return init_chat_model(
         model=model_name,
