@@ -1,5 +1,14 @@
 import os
 import sys
+import asyncio
+
+# Enforce Proactor event loop on Windows to support subprocesses (Playwright)
+if sys.platform == "win32":
+    try:
+        asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+    except AttributeError:
+        pass
+
 import typer
 from typing import Optional
 from src.db import init_db, get_db, Lead

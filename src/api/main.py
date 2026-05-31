@@ -1,4 +1,14 @@
 import os
+import sys
+import asyncio
+
+# Enforce Proactor event loop on Windows to support subprocesses (Playwright)
+if sys.platform == "win32":
+    try:
+        asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+    except AttributeError:
+        pass
+
 import yaml
 from typing import List, Optional, Dict, Any
 # pyrefly: ignore [missing-import]
@@ -8,7 +18,6 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-import asyncio
 import json
 from datetime import datetime
 from pydantic import BaseModel
