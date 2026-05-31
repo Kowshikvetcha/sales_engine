@@ -122,10 +122,13 @@ email:
 To start the FastAPI web server, run Uvicorn inside the activated Python environment:
 ```powershell
 # From the root directory:
-.venv\Scripts\uvicorn src.api.main:app --reload --host 127.0.0.1 --port 8000
+.venv\Scripts\uvicorn src.api.main:app --host 127.0.0.1 --port 8000
 ```
 - The REST API will be exposed at `http://127.0.0.1:8000`
 - You can explore the interactive OpenAPI docs at `http://127.0.0.1:8000/docs`
+
+> [!WARNING]
+> **Windows/Playwright compatibility:** Do NOT include the `--reload` flag on Windows. Uvicorn's reload manager forces the use of `SelectorEventLoop`, which causes a `NotImplementedError` when Playwright attempts to launch its crawler subprocess.
 
 ---
 

@@ -74,7 +74,7 @@ Once the database file (`data/leads.db`) is deleted, the system enters an uninit
 The next time you perform any of the following actions, the backend automatically detects the absence of the database, creates a new `leads.db` file, and sets up all required schemas and tables:
 * Starting the FastAPI backend server:
   ```bash
-  .venv\Scripts\uvicorn src.api.main:app --reload
+  .venv\Scripts\uvicorn src.api.main:app
   ```
 * Running any pipeline commands via CLI:
   ```bash
