@@ -12,6 +12,7 @@ A premium B2B sales outreach automation system. This application crawls US busin
 
 > [!NOTE]
 > **Project Documentation Quick Links:**
+> - [Step-by-Step User Guide](docs/user_guide.md) – Comprehensive guide on how to use the web app (with screenshots) and terminal CLI.
 > - [Project Guide & File Directory](docs/project_guide.md) – A complete guide explaining what each file in the project does.
 > - [API Keys Setup Guide](docs/api_keys_guide.md) – Configuration instructions for Google PageSpeed, LLMs, and Gmail OAuth.
 
@@ -24,6 +25,7 @@ A premium B2B sales outreach automation system. This application crawls US busin
 ├── .env.example         # Template for API keys, secret credentials, and auth tokens
 ├── requirements.txt     # Python backend dependencies
 ├── docs/
+│   ├── user_guide.md     # Step-by-step user guide with dashboard screenshots
 │   ├── project_guide.md  # Guide explaining what every file in the project does
 │   ├── api_keys_guide.md # Comprehensive API key acquisition and setup guide
 │   └── SALES_AUTOMATION_SPEC.md # Product and system specifications document
