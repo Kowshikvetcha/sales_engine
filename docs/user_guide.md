@@ -1,170 +1,205 @@
-# Website-Audit Sales Automation Platform: Step-by-Step User Guide
+# Website-Audit Sales Automation Platform: End-to-End User Guide
 
-This guide provides a comprehensive, step-by-step walkthrough of how to use both the **React Frontend Dashboard** and the **Terminal Command Line Interface (CLI)** to run B2B sales automation campaigns.
+This document provides a highly detailed, step-by-step guide on how to configure and use both the **React Frontend Dashboard** and the **Terminal Command Line Interface (CLI)** to run B2B outreach campaigns. It includes screenshots of the actual running application to help you navigate each screen with ease.
 
 ---
 
 ## Table of Contents
-1. [Prerequisites & Initial Setup](#1-prerequisites--initial-setup)
-2. [Step-by-Step Web Application Guide](#2-step-by-step-web-application-guide)
-   * [Step 1: Dashboard Login & Token Authentication](#step-1-dashboard-login--token-authentication)
-   * [Step 2: Importing Leads (CSV Ingestion)](#step-2-importing-leads-csv-ingestion)
-   * [Step 3: Crawler & Website Audits (Dashboard & Leads Tab)](#step-3-crawler--website-audits-dashboard--leads-tab)
-   * [Step 4: Reviewing and Editing Email Drafts (Review Queue)](#step-4-reviewing-and-editing-email-drafts-review-queue)
-   * [Step 5: Dispatching Campaigns (Send Console)](#step-5-dispatching-campaigns-send-console)
-   * [Step 6: LLM A/B Model Comparisons (Bake-Off Console)](#step-6-llm-ab-model-comparisons-bake-off-console)
-3. [Step-by-Step Terminal CLI Guide](#3-step-by-step-terminal-cli-guide)
-4. [Compliance Safeguards & Simulation Mode](#4-compliance-safeguards--simulation-mode)
+1. [Initial Preparation & Prerequisites](#1-initial-preparation--prerequisites)
+2. [Step-by-Step Guide: Importing Leads (CSV Ingestion)](#2-step-by-step-guide-importing-leads-csv-ingestion)
+3. [Step-by-Step Guide: Scraping & Auditing (Playwright & PageSpeed)](#3-step-by-step-guide-scraping--auditing-playwright--pagespeed)
+4. [Step-by-Step Guide: Email Drafting & Human Review](#4-step-by-step-guide-email-drafting--human-review)
+5. [Step-by-Step Guide: Dispatching Campaigns (Send Console)](#5-step-by-step-guide-dispatching-campaigns-send-console)
+6. [Step-by-Step Guide: A/B Model Comparisons (Bake-Off Console)](#6-step-by-step-guide-ab-model-comparisons-bake-off-console)
+7. [The Automated End-to-End Execution Flow](#7-the-automated-end-to-end-execution-flow)
+8. [Compliance & Safety Safeguards](#8-compliance--safety-safeguards)
 
 ---
 
-## 1. Prerequisites & Initial Setup
+## 1. Initial Preparation & Prerequisites
 
-Before running the application, make sure you have installed all dependencies and configured your environment files:
-* **Backend Virtual Environment:** Run `.venv\Scripts\activate` (Windows) or `source .venv/bin/activate` (Mac/Linux) and install dependencies using `pip install -r requirements.txt`.
-* **Playwright Scraping Binaries:** Run `playwright install chromium` to install headless crawler engines.
-* **Secrets Setup:** Set up your `.env` file with `API_AUTH_TOKEN` and your respective LLM & Google PageSpeed API keys. Follow [API Keys Setup Guide](api_keys_guide.md) for step-by-step acquisition directions.
-* **Server Execution:**
-  * Start the FastAPI backend: `.venv\Scripts\uvicorn src.api.main:app --reload` (runs on `http://127.0.0.1:8000`).
-  * Start the React UI: `cd frontend && npm run dev` (runs on `http://localhost:5173`).
-
----
-
-## 2. Step-by-Step Web Application Guide
-
-### Step 1: Dashboard Login & Token Authentication
-When you open `http://localhost:5173` in your browser for the first time, you will be prompted with a secure login dialog.
-1. Enter the `API_AUTH_TOKEN` value configured in your `.env` file.
-2. Click **Submit**. The dashboard will store this session token securely and grant access to the application data.
+To run the application, ensure your environment is set up:
+1. **Virtual Environment & Dependencies:**
+   * Activate your virtual env: `.venv\Scripts\activate` (Windows) or `source .venv/bin/activate` (Mac/Linux).
+   * Install python packages: `pip install -r requirements.txt`.
+   * Install crawler binaries: `playwright install chromium`.
+2. **Environment Variables:** Define keys inside your `.env` file (e.g. `API_AUTH_TOKEN=test-token`). For instructions on Google PageSpeed, OpenAI, Gemini, or Anthropic Claude API keys, read the [API Keys Setup Guide](api_keys_guide.md).
+3. **Run Dev Servers:**
+   * **Backend:** `.venv\Scripts\uvicorn src.api.main:app --host 127.0.0.1 --port 8000`
+   * **Frontend:** `cd frontend && npm run dev`
+   * Navigate to `http://localhost:5173` and authenticate using your `API_AUTH_TOKEN`.
 
 ---
 
-### Step 2: Importing Leads (CSV Ingestion)
-To feed businesses into your campaign pipeline, start by importing a CSV lead sheet.
-1. Navigate to the **Import Leads** tab on the navigation bar.
-2. Drag and drop your `.csv` file or click to choose a file.
-3. The table will instantly preview the first few rows of your CSV.
-4. **Header Mapping:** Use the dropdown selectors to map your CSV columns to the required database fields:
-   * **Company Name** (required)
-   * **Website URL** (required)
-   * **Target Email** (required)
-   * **Contact Name** (optional)
-5. Click **Import Leads**. A background task will parse, normalize URLs, check the suppression opt-out blacklist, and ingest new prospects while omitting duplicates.
+## 2. Step-by-Step Guide: Importing Leads (CSV Ingestion)
+
+The pipeline starts by importing business targets. The app parses name, website, and target email fields while validating syntax, skipping duplicates, and blacklisting opted-out recipients.
+
+### CSV Layout Example
+Your CSV file should have a clean tabular format. Common column headers are auto-detected, but you can map custom headers on the import page.
+```csv
+Company Name,Website URL,Email Address,Contact Person
+Acme Corp,https://acme.com,info@acme.com,John Doe
+Beta Agency,beta-agency.net,contact@beta-agency.net,Jane Smith
+```
+
+### Ingestion Walkthrough
+1. Select **Lead Import** from the sidebar navigation.
+2. Drag and drop your `.csv` file into the upload zone or click to browse.
+3. Once loaded, the **CSV Preview Table** renders the first 3 rows of your CSV file so you can check formatting.
+4. Use the dropdown boxes under **Map CSV Columns** to match your file columns with:
+   * **Company Name** (Required)
+   * **Website URL** (Required)
+   * **Target Email** (Required)
+   * **Contact Name** (Optional)
+5. Click **Import Leads**. The background worker will run validation routines:
+   * Cleans and normalizes URLs (e.g., stripping `www.` and appending `https://`).
+   * Verifies syntax validity.
+   * Compares domains/emails against the **Suppression List** (marking matches as `suppressed`).
+   * Skips duplicates already existing in the database.
+6. The UI will redirect you to the **Leads Directory** or **Background Jobs** tab to view ingestion counts.
+
+![Lead Import UI Screenshot](images/import_mockup.png)
 
 ---
 
-### Step 3: Crawler & Website Audits (Dashboard & Leads Tab)
-Once leads are imported, they start in the `imported` state. The background worker processes them through scraping and auditing.
-1. Navigate to the main **Dashboard** tab. Here, you will see a visual representation of your leads funnel:
-   * **Funnel Statistics:** Cards showing counts for Pending Crawler, Pending Audits, Drafted, Approved, Sent, and Failed leads.
-   * **Lead Conversion Chart:** A visual timeline graph illustrating conversion success rates.
-   * **Active Run Logs:** A stream showing live task indicators.
-2. Navigate to the **Leads Table** tab to search, page, and filter prospects.
-3. Click on any row to open the **Lead Inspector Panel** sliding in from the right:
-   * View raw crawled text.
-   * Preview full-page desktop screenshots captured by Playwright.
-   * Review performance Lighthouse metrics (Performance, SSL status, missing SEO tags, analytics tracker alerts).
+## 3. Step-by-Step Guide: Scraping & Auditing (Playwright & PageSpeed)
 
-![Dashboard UI Mockup](images/dashboard_mockup.png)
+Once leads are imported, they enter the `imported` state and are ready for web audits.
+
+### Step 1: Website Scraping (Playwright Crawler)
+1. Trigger the scraper by navigating to the **Background Jobs** tab, select `scrape` from the job type list, and click **Launch Job**.
+   * *CLI Alternative:* `.venv\Scripts\python -m src.main scrape`
+2. **Under the Hood (Automated):**
+   * The scraper checks `robots.txt` compliance for each target.
+   * It spins up a headless Playwright Chromium instance.
+   * It scans the homepage and crawls internal links containing B2B keywords (e.g. `about`, `services`, `contact`, `pricing`) up to configuration depth.
+   * It takes a full-screen desktop screenshot saved to `data/screenshots/`.
+   * Concatenated text contents are saved into the database, and the status changes to `scraped`.
+
+### Step 2: Running Audits & Signal Mapping (Analysis)
+1. Launch an `analyze` job from the **Background Jobs** tab.
+   * *CLI Alternative:* `.venv\Scripts\python -m src.main analyze`
+2. **Under the Hood (Automated):**
+   * The analyzer inspects the homepage HTML for specific elements: missing title/description tags, viewport responsiveness, missing contact forms, and absence of analytics trackers (Google Analytics/Tag Manager/Facebook Pixel).
+   * It queries Google's **PageSpeed Insights API** (if configured, or falls back to simulated scores) to gather core metrics: Performance, Accessibility, Best Practices, and SEO.
+   * It conducts concurrent broken-link verification across crawled internal hyperlinks.
+   * Based on weaknesses, it maps leads to concrete sold services (e.g. CRM Integration, Full-Stack Design, SEO, Analytics setup) sorted by severity and saves them as database findings.
+   * Lead status shifts to `analyzed`. Leads with zero detected findings are skipped (`skipped_no_findings`).
+
+To view results, navigate to **Leads Directory**, click a lead row, and review the slide-out **Inspector Panel** displaying screenshots, scores, and specific mapped findings.
+
+![Dashboard UI Screenshot](images/dashboard_mockup.png)
 
 ---
 
-### Step 4: Reviewing and Editing Email Drafts (Review Queue)
-After audits complete, the system automatically uses LLMs (under guidelines defined in `config.yaml` and prompt instructions) to write highly personalized cold outreach emails. These drafts land in the **Review Queue**.
+## 4. Step-by-Step Guide: Email Drafting & Human Review
+
+With objective website weaknesses mapped, the LLM constructs outreach drafts.
+
+### Step 1: Email Generation
+1. Launch a `generate` job from the **Background Jobs** tab.
+   * *CLI Alternative:* `.venv\Scripts\python -m src.main generate`
+2. **Under the Hood (Automated):**
+   * The generator loads configurations and LLM temperature rules.
+   * It formats prompt context linking lead metadata, page speed results, and mapped findings, forcing the model to cite only verified audit findings.
+   * **Grounding Validator:** Passes the written draft to a separate deterministic LLM auditor to compare citations against database findings. Re-generates drafts if they mention hallucinated claims (e.g. referencing SSL errors when SSL is valid).
+   * Appends deterministic, CAN-SPAM compliant footers (sender information, company address, and unsubscribe link) and updates status to `drafted`.
+
+### Step 2: Interactive Human-in-the-Loop Review
+To ensure email quality before dispatching, drafts must go through review:
 1. Navigate to the **Review Queue** tab.
-2. The UI splits into a **two-pane editor**:
-   * **Left Pane:** A list of leads currently in the `drafted` state, highlighting their domains.
-   * **Right Pane:** The detailed review pane for the selected lead, displaying:
-     * Audited website weaknesses and mapped service offerings (e.g. Design, CRM integration, SEO fixes).
-     * Subject Line and Email Body editor textareas.
-     * Model parameters (e.g., system temperature, provider choice).
-3. Review the draft. You can make manual corrections directly in the text editor.
-4. Click **Approve** to move the lead to `approved` (ready to send) or **Reject** to discard the draft.
+2. Select a lead from the left sidebar to load the **two-pane workspace**:
+   * **Left Sidebar:** Filterable list of all prospects currently in `drafted` status.
+   * **Main Pane:** Displays lead detail telemetry, page speed indicators, crawled subpage links, and the email editor.
+3. Review the subject and body. You can edit the text blocks directly.
+4. Choose the appropriate action:
+   * **Approve:** Moves lead/email status to `approved`, staging it for sending.
+   * **Reject:** Prompts you to enter a feedback reason, archiving the lead as `rejected`.
+   * **Skip:** Bypasses the lead for later review.
+   * *Keyboard Shortcuts:* Press `A` to Approve, `R` to Reject, and `S` to Skip.
 
-![Review Queue UI Mockup](images/review_queue_mockup.png)
+![Review Queue UI Screenshot](images/review_queue_mockup.png)
 
 ---
 
-### Step 5: Dispatching Campaigns (Send Console)
-The **Send Console** acts as the campaign cockpit, controlling sending rates, mode variables, and tracking live API integrations.
+## 5. Step-by-Step Guide: Dispatching Campaigns (Send Console)
+
+The **Send Console** acts as the campaign cockpit, managing dispatch speed, dry-run simulation states, and providing live execution logs.
+
+### Campaign Dispatch Walkthrough
 1. Navigate to the **Send Console** tab.
-2. Review the following UI widgets:
-   * **Sending Gauge:** A dynamic circular gauge showing current daily caps utilization (defaulting to a safety ceiling of 30 sends/day).
-   * **Simulator Mode Toggle:** A switch choosing between simulated dry-run sends (emails written to database logs without emailing clients) and live Google Workspace/Gmail API dispatches.
-   * **Trigger Dispatcher:** Click **Start Sending Job** to spin up the background delivery worker.
-3. **Live SSE Terminal Logs:** Watch the console terminal box scroll in real-time as the worker verifies CAN-SPAM compliance headers, enforces rate-limiting delays between dispatches, verifies blacklists, and completes deliveries.
+2. Review the following widgets:
+   * **Today's Sends Gauge:** A circular indicator measuring the number of emails sent today against the configured daily sending limit cap (defaults to a safe throttle of 30 sends/day).
+   * **Simulator Mode Toggle:** Switch choosing between simulated runs (mock sends written to database logs without emailing clients) and live Gmail API dispatches.
+   * **Compliance Alert:** Warns if `physical_address` or `unsubscribe_base_url` settings in `config.yaml` contain default placeholder values. Live Mode remains disabled until these fields are customized.
+3. Click **Start Sending Job**.
+4. **SSE Live Terminal Console:** Watch the console box stream real-time logs directly from the backend worker showing:
+   * Pre-send compliance validations.
+   * Suppression list double-checks.
+   * Inter-message politeness delays.
+   * Delivery success confirmations.
 
-![Send Console UI Mockup](images/send_console_mockup.png)
+![Send Console UI Screenshot](images/send_console_mockup.png)
 
 ---
 
-### Step 6: LLM A/B Model Comparisons (Bake-Off Console)
-To optimize your copywriting and compare providers, run model bake-offs:
-1. Navigate to the **Model Bake-Off** tab.
-2. Select a target lead sample and choose which model APIs to run side-by-side (e.g., Anthropic Claude, OpenAI GPT, Google Gemini).
+## 6. Step-by-Step Guide: A/B Model Comparisons (Bake-Off Console)
+
+Compare outputs from different LLM providers (Anthropic Claude, OpenAI GPT, Google Gemini) side-by-side:
+1. Navigate to the **Model Bake-off** tab.
+2. Set a **Lead Sample Size** and toggle which model providers to test.
 3. Click **Execute Comparison**.
-4. The screen renders a side-by-side evaluation layout:
-   * Each column represents a model's draft, complete with speed/latency tracking (e.g., 1.4s), estimated generation cost based on token length, subject lines, and draft bodies.
-   * Green visual labels mark the **Fastest** and **Cheapest** drafts to help you select the ideal model for scale.
+4. The dashboard queries all selected models simultaneously and displays results in a comparative columns grid:
+   * Details character counts, estimated API token costs, and generation latency (in seconds).
+   * Visual indicators identify the **Fastest** and **Cheapest** drafts.
+   * Previews the draft subject and body text generated by each LLM.
 
-![Model Bake-Off UI Mockup](images/bakeoff_mockup.png)
+![Model Bake-Off UI Screenshot](images/bakeoff_mockup.png)
 
 ---
 
-## 3. Step-by-Step Terminal CLI Guide
+## 7. The Automated End-to-End Execution Flow
 
-If you prefer operating from the terminal or want to set up automated cron jobs, you can execute the pipeline end-to-end using Python CLI subcommands:
+To run the entire pipeline without clicking through individual pages in the web dashboard, you can trigger automated scripts.
 
-### 1. Ingest Leads
-Import prospects from a local CSV sheet:
+### How the Automated Flow Works
+The automation scripts orchestrate the pipeline stages in sequence:
+1. **Virtual Environment Activation:** Detects and activates the local `.venv`.
+2. **Web Crawling:** Executes Playwright scraping on all leads in `pending` status.
+3. **HTML & PageSpeed Auditing:** Runs local inspections and queries Lighthouse API metrics, mapping findings to sold services.
+4. **LLM Writing & Grounding:** Generates cold email outreach copies and filters out drafts failing grounding audits.
+5. **Campaign Delivery:** Initiates the sending queue, distributing emails while respecting suppression blacklists and daily limit throttles.
+
+### Running the Automated Script
+At the root of the project, run the script for your environment:
+
+#### Windows PowerShell:
 ```powershell
-.venv\Scripts\python -m src.main ingest --csv data/leads_sample.csv
+# Run automatically in Simulator (dry-run) mode for up to 5 leads
+.\run_pipeline.ps1 -Limit 5 -DryRun $true
+
+# Run live campaigns (make sure your .env and Gmail OAuth are configured)
+.\run_pipeline.ps1 -Limit 10 -DryRun $false
 ```
 
-### 2. Crawl Websites
-Activate Playwright to scrape homepage texts and capture screenshots:
-```powershell
-.venv\Scripts\python -m src.main scrape
-```
+#### Unix / macOS Bash:
+```bash
+# Set script permissions
+chmod +x run_pipeline.sh
 
-### 3. Run SEO & PageSpeed Audits
-Analyze local page criteria and fetch API metrics:
-```powershell
-.venv\Scripts\python -m src.main analyze
-```
+# Run automatically in Simulator (dry-run) mode
+./run_pipeline.sh --limit 5 --dry-run
 
-### 4. Generate Email Drafts
-Draft grounded emails using your default LLM:
-```powershell
-.venv\Scripts\python -m src.main generate
-```
-
-### 5. Interactive Review Queue
-Step through drafted campaigns in an interactive terminal review loop:
-```powershell
-.venv\Scripts\python -m src.main review
-```
-* The terminal will print lead information and prompt you: `Approve [A], Reject [R], Edit [E], Skip [S], Quit [Q]`.
-
-### 6. Deliver Campaigns
-Dispatch approved emails:
-```powershell
-.venv\Scripts\python -m src.main send
-```
-* **Simulator Flag:** Add `--dry-run` or configure settings to simulate sends locally without calling the Gmail API.
-
-### 7. View Pipeline Funnel Status
-Extract a quick statistical report of lead statuses:
-```powershell
-.venv\Scripts\python -m src.main status
+# Run live campaigns
+./run_pipeline.sh --limit 10 --real-run
 ```
 
 ---
 
-## 4. Compliance Safeguards & Simulation Mode
+## 8. Compliance & Safety Safeguards
 
-This platform enforces strict compliance guards to protect your domain sending reputation and comply with CAN-SPAM laws:
-
-* **Simulation Lock:** By default, the application runs in **Simulator Mode**. The system refuses to send live emails if `email.physical_address` or `email.unsubscribe_base_url` are set to default placeholders in `config.yaml`.
-* **Suppression Blacklists:** Any lead whose email domain or exact address matches the suppression list database table is automatically set to `suppressed` status, preventing any generated drafts or dispatches.
-* **Daily Capsule Safeguard:** Sending operations enforce a daily cap of **30** emails (adjustable under `send.daily_send_limit` in `config.yaml`) to avoid hitting spam-trap rate limits.
+To maintain a healthy domain sending reputation, the application enforces the following rules:
+* **Simulator Lockout:** If `email.physical_address` or `email.unsubscribe_base_url` are left as placeholders (`123 Main St` or `localhost`), the system locks the dispatcher into simulator-only mode.
+* **Suppression Blacklist:** If an imported lead matches a blacklisted domain or email address in the Suppression table, its status is immediately set to `suppressed`, bypassing crawler, generator, and sending scripts.
+* **Daily Caps:** Sending jobs halt immediately once the maximum daily cap is hit (30 sends/day by default), protecting your address from spam filters.
