@@ -272,10 +272,10 @@ def create_job(payload: JobCreate, background_tasks: BackgroundTasks, db: Sessio
     """
     Enqueue a background job for a pipeline stage.
     """
-    if payload.type not in ["scrape", "analyze", "generate", "send", "bakeoff"]:
+    if payload.type not in ["scrape", "analyze", "generate", "send", "bakeoff", "pipeline"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid job type '{payload.type}'. Supported types: scrape, analyze, generate, send, bakeoff"
+            detail=f"Invalid job type '{payload.type}'. Supported types: scrape, analyze, generate, send, bakeoff, pipeline"
         )
     job = enqueue_job(payload.type, payload.params or {}, db, background_tasks)
     return job

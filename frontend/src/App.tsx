@@ -430,6 +430,19 @@ function DashboardView({ stats, loading, onLaunchJob }: DashboardViewProps) {
           </div>
 
           <div className="flex-1 flex flex-col justify-center space-y-3">
+            <PremiumPipelineButton 
+              label="Run Entire Pipeline" 
+              desc="Scrape, analyze, and draft emails consecutively" 
+              onClick={() => runMutation.mutate({ type: "pipeline" })} 
+              loading={runMutation.isPending && runMutation.variables?.type === "pipeline"}
+            />
+            
+            <div className="relative flex py-1 items-center">
+              <div className="flex-grow border-t border-slate-850"></div>
+              <span className="flex-shrink mx-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Or run individual stages</span>
+              <div className="flex-grow border-t border-slate-850"></div>
+            </div>
+
             <PipelineButton 
               label="Run Web Scraper" 
               desc="Scrape pending websites" 
@@ -506,6 +519,31 @@ function PipelineButton({ label, desc, onClick, loading }: PipelineButtonProps) 
       </div>
       <div className="bg-slate-800 p-2 rounded-lg text-slate-400 group-hover:text-brand-500 group-hover:bg-brand-900/20 transition">
         {loading ? <RotateCw className="h-4 w-4 animate-spin text-brand-500" /> : <Play className="h-4 w-4" />}
+      </div>
+    </button>
+  );
+}
+
+function PremiumPipelineButton({ label, desc, onClick, loading }: PipelineButtonProps) {
+  return (
+    <button 
+      onClick={onClick}
+      disabled={loading}
+      className="w-full flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-brand-950/50 to-slate-900/50 border border-brand-500/30 hover:border-brand-500/60 hover:bg-slate-905 transition text-left group disabled:opacity-50 shadow-[0_0_15px_rgba(139,92,246,0.05)] hover:shadow-[0_0_20px_rgba(139,92,246,0.15)] animate-pulse hover:animate-none"
+      style={{ animationDuration: '3s' }}
+    >
+      <div className="flex-1 mr-2 text-left">
+        <div className="flex items-center space-x-2">
+          <h4 className="text-sm font-bold text-slate-100 group-hover:text-brand-400 transition flex items-center gap-1.5">
+            <Sparkles className="h-4 w-4 text-brand-400 animate-pulse" />
+            {label}
+          </h4>
+          <span className="px-1.5 py-0.5 text-[9px] font-semibold bg-brand-500/20 text-brand-300 border border-brand-500/30 rounded uppercase tracking-wider shrink-0">All-in-One</span>
+        </div>
+        <span className="text-xs text-slate-400 leading-tight block mt-1">{desc}</span>
+      </div>
+      <div className="bg-brand-600 text-white p-2.5 rounded-lg group-hover:bg-brand-500 transition shadow-lg shadow-brand-500/20 shrink-0">
+        {loading ? <RotateCw className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4 fill-white" />}
       </div>
     </button>
   );
@@ -1261,6 +1299,9 @@ function JobsView() {
         
         if (data.done !== undefined && data.total !== undefined) {
           message += ` | Progress: ${data.done}/${data.total} units`;
+        }
+        if (data.message) {
+          message += ` | ${data.message}`;
         }
         if (data.error) {
           message += ` | Error: ${data.error}`;

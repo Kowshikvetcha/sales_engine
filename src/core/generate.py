@@ -65,18 +65,48 @@ async def generate_email_for_lead(
 
     # 1. Check if mock API key
     if not api_key or api_key == "mock-key":
-        # Generate standard mock email based on findings
-        subject = f"Improving web performance for {lead.name or lead.domain}"
-        evidence_str = "\n".join(f"- {ev}" for ev in evidence_list)
-        body = (
+        # Generate detailed mock email based on findings mapping to services
+        subject = f"Website Audit & Growth Strategy for {lead.name or lead.domain}"
+        body_parts = [
             f"Hi {lead.name or 'there'},\n\n"
-            f"I was reviewing the website for {lead.name or lead.domain} and noticed the following items:\n"
-            f"{evidence_str}\n\n"
-            f"We specialize in resolving these design, CRM, and analytics gaps. Would you be open to a quick call next week to discuss this?\n\n"
-            f"Best,\n"
+            f"I recently conducted a technical audit of the website for {lead.name or lead.domain}. "
+            f"I identified a few key areas where we can make significant improvements to enhance your visitor experience, SEO rankings, and lead conversion rates:"
+        ]
+        
+        # Build detailed breakdown matching how the agency can help
+        for service, info in findings_dict.items():
+            ev = info["evidence"]
+            if service == "Full-stack design":
+                body_parts.append(
+                    f"\n- Design & UX Opportunity: We detected that {ev}. "
+                    f"Our Full-stack design services can optimize your page load speeds, resolve any responsive layout issues, "
+                    f"and ensure secure SSL connections to restore visitor trust and search ranking."
+                )
+            elif service == "CRM":
+                body_parts.append(
+                    f"\n- CRM & Lead Capture Optimization: Our audit noted that {ev}. "
+                    f"By implementing a customized CRM form, we can connect inquiries directly to your sales pipeline, "
+                    f"automating follow-ups and stopping leads from falling through the cracks."
+                )
+            elif service == "Data analytics":
+                body_parts.append(
+                    f"\n- Analytics & SEO Tracking: The audit showed that {ev}. "
+                    f"Our Data analytics solutions can instrument visitor tracking and web traffic instrumentation, "
+                    f"helping you track performance and boost organic SEO presence."
+                )
+            elif service == "Full-stack data solutions":
+                body_parts.append(
+                    f"\n- Systems Integration: We found that {ev}. "
+                    f"We can build automated database flows and API links, eliminating manual processes and making your operations seamless."
+                )
+        
+        body_parts.append(
+            f"\n\nWe specialize in resolving these technical gaps. {settings.email.cta or 'Would you be open to a quick call next week to discuss this?'}\n\n"
+            f"Best regards,\n"
             f"{settings.email.sender_name}\n"
             f"{settings.email.sender_company}"
         )
+        body = "".join(body_parts)
         findings_cited = evidence_list
         is_grounded = True
         logger.info("Mock LLM generation complete", lead_id=lead.id)

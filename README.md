@@ -22,32 +22,72 @@ A premium B2B sales outreach automation system. This application crawls US busin
 ## Project Structure
 
 ```
-├── config.yaml          # Global non-secret system configurations (timeouts, rules, limits)
-├── .env.example         # Template for API keys, secret credentials, and auth tokens
-├── requirements.txt     # Python backend dependencies
-├── docs/
-│   ├── user_guide.md     # Step-by-step user guide with dashboard screenshots
-│   ├── database_reset_guide.md # Guide explaining how to reset local database and clear files
-│   ├── project_guide.md  # Guide explaining what every file in the project does
-│   ├── api_keys_guide.md # Comprehensive API key acquisition and setup guide
-│   └── SALES_AUTOMATION_SPEC.md # Product and system specifications document
-├── src/
-│   ├── main.py          # Terminal CLI entry point (Typer command suite)
-│   ├── db.py            # SQLite session management and database models
-│   ├── config.py        # Configuration manager merging yaml and .env settings
-│   ├── models.py        # Pydantic validation schemas
-│   ├── api/
-│   │   ├── main.py      # FastAPI application server and REST endpoints
-│   │   └── jobs.py      # Async background task runner and SSE streaming channels
-│   └── core/            # Ingestion, scraping, audits, LLM drafts, and email services
-├── frontend/
-│   ├── package.json     # Node frontend project configuration
-│   ├── vite.config.ts   # Vite bundler options and backend API proxy rules
-│   └── src/
-│       ├── App.tsx      # React Single Page Application and views layout
-│       └── api/
-│           └── client.ts # Front-end API client wrappers
-└── tests/               # Backend pytest suite (scraping, mapping, audits, send, and api tests)
+├── config.yaml               # Global configurations (timeouts, throttle limits, compliance details)
+├── .env.example              # Template for local environment variables and secret API keys
+├── requirements.txt          # Python packages and backend dependencies list
+├── reset_project.ps1         # PowerShell script to clean and initialize database and screenshots
+├── reset_project.sh          # Unix shell script to clean and initialize database and screenshots
+├── run_pipeline.ps1          # PowerShell automation script executing all pipeline stages consecutively
+├── run_pipeline.sh           # Unix shell automation script executing all pipeline stages consecutively
+├── agents.md                 # Agent handoff log and feature registry for developer context
+├── data/                     # Local data files and assets storage directory
+│   ├── leads.db              # SQLite database containing funnel status and lead records
+│   └── screenshots/          # Folder storing browser screenshots of lead sites captured by Playwright
+├── secrets/                  # Secure directory storing sensitive Google API keys and credentials
+│   ├── gmail_oauth.json      # Client secrets JSON file downloaded from Google API console
+│   └── gmail_token.json      # Generated credentials token file after authorizing Gmail OAuth
+├── docs/                     # Documentation manuals and specification guides
+│   ├── images/               # Screenshots and image assets used in documentation
+│   ├── api_keys_guide.md     # Setup guide explaining how to acquire API keys and configure credentials
+│   ├── database_reset_guide.md # Instructions explaining how to clean lead funnel database entries
+│   ├── project_guide.md      # Detailed file-by-file directory explanation of the backend core
+│   ├── user_guide.md         # Full user manual with visual UI workflows and CLI parameters
+│   └── SALES_AUTOMATION_SPEC.md # Original product and system specification document
+├── src/                      # Backend Python source code
+│   ├── main.py               # Typer-powered terminal CLI entrypoint
+│   ├── db.py                 # SQLAlchemy session engine and database table schemas
+│   ├── config.py             # Configuration loader merging yaml settings and environment variables
+│   ├── models.py             # Pydantic schemas validating API request and response data payloads
+│   ├── api/                  # FastAPI web server module
+│   │   ├── main.py           # REST endpoints, CORS policies, and global authentication middleware
+│   │   └── jobs.py           # Async job worker enqueuing pipeline stages and broadcasting SSE updates
+│   ├── core/                 # Pipeline execution stage modules
+│   │   ├── ingest.py         # Parses, normalizes, validates, and imports leads from CSV records
+│   │   ├── scrape.py         # Playwright crawler extracting body text and taking screenshots
+│   │   ├── analyze.py        # Runs local HTML audits, broken links check, and PageSpeed scores
+│   │   ├── service_map.py    # Service mapper mapping website audits findings to sold packages
+│   │   ├── generate.py       # LLM generation coordinator writing drafts and checking grounding
+│   │   ├── review.py         # Terminal-based interactive leads approval workflow
+│   │   └── send.py           # Delivery queue manager with compliance safeguards and limits throttling
+│   ├── integrations/         # External service connectors
+│   │   ├── pagespeed.py      # Client wrapper fetching Google PageSpeed metrics
+│   │   ├── sender_base.py    # Abstract base interface class for email provider senders
+│   │   └── gmail_sender.py   # Gmail API implementation class utilizing OAuth tokens
+│   ├── llm/                  # Language model integrations
+│   │   ├── client.py         # LangChain dynamic chat model loader supporting OpenAI/Anthropic/Gemini
+│   │   ├── prompts.py        # System prompt templates enforcing strict copy structure and schema rules
+│   │   ├── validate.py       # Grounding auditor checking written emails for hallucinated claims
+│   │   └── bakeoff.py        # Performance comparison engine testing multiple models side-by-side
+│   └── utils/                # Helper modules
+│       ├── logging.py        # Structured logging configuration setup
+│       └── url.py            # URL cleaner, normalizer, and domain extraction utility methods
+├── frontend/                 # Frontend React client codebase
+│   ├── package.json          # Node dependencies and scripts
+│   ├── vite.config.ts        # Vite build tool and API proxy forwarding setup
+│   └── src/                  # React application source code
+│       ├── main.tsx          # Frontend React DOM entrypoint
+│       ├── App.css           # Global custom typography and theme overrides
+│       ├── index.css         # Tailwind v4 import rules and theme configurations
+│       ├── App.tsx           # Dashboard view layouts, modals, state hooks, and routing shell
+│       └── api/              # Frontend API client
+│           └── client.ts     # Custom fetch wrapper fetching backend endpoints
+└── tests/                    # Pytest test suite modules
+    ├── test_api.py           # Integration tests validating FastAPI REST endpoints and SSE streams
+    ├── test_grounding.py     # Assertions checking LLM email grounding validation loops
+    ├── test_ingest.py        # Unit tests validating CSV ingestion parser and URL cleaners
+    ├── test_scrape.py        # Assertions testing Playwright web scraping and subpage crawlers
+    ├── test_send_dryrun.py   # Tests checking suppression checks and daily send caps
+    └── test_service_map.py   # Table-driven testing validating mapper rules and thresholds
 ```
 
 

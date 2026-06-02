@@ -75,8 +75,10 @@ async def send_emails(
         logger.info("No emails found that are ready for sending.")
         return {"total": 0, "sent": 0, "suppressed": 0, "failed": 0, "cap_hit": False}
 
-    # Initialize sender
-    sender = GmailSender()
+    # Initialize sender only on real runs to prevent dry-runs from blocking on interactive OAuth
+    sender = None
+    if not dry_run:
+        sender = GmailSender()
 
     stats = {"total": len(candidates), "sent": 0, "suppressed": 0, "failed": 0, "cap_hit": False}
     

@@ -98,35 +98,35 @@ def map_signals_to_services(
             "low"
         ))
 
-    # Deduplicate findings per service and pick the most severe finding for each service
-    severity_order = {"high": 3, "medium": 2, "low": 1}
-    service_best_finding: Dict[str, Tuple[str, str]] = {}  # service_name -> (evidence, severity)
-    
+    # Group findings per service and collect all evidences
+    service_findings = {}  # service_name -> list of (evidence, severity)
     for service, evidence, severity in findings:
-        current_sev_val = severity_order.get(severity, 1)
-        if service in service_best_finding:
-            existing_sev_val = severity_order.get(service_best_finding[service][1], 1)
-            if current_sev_val > existing_sev_val:
-                service_best_finding[service] = (evidence, severity)
-        else:
-            service_best_finding[service] = (evidence, severity)
+        if service not in service_findings:
+            service_findings[service] = []
+        service_findings[service].append((evidence, severity))
 
-    # Sort final findings by severity value descending
+    # Sort services by their maximum severity
+    severity_order = {"high": 3, "medium": 2, "low": 1}
+    def get_max_severity(service_name):
+        return max(severity_order.get(sev, 1) for _, sev in service_findings[service_name])
+
     sorted_services = sorted(
-        service_best_finding.items(),
-        key=lambda item: severity_order.get(item[1][1], 1),
+        service_findings.keys(),
+        key=get_max_severity,
         reverse=True
     )
 
     # Limit to max_findings
-    selected_findings = sorted_services[:max_findings]
+    selected_services = sorted_services[:max_findings]
 
-    # Convert to expected service_map structure
+    # Convert to expected service_map structure, joining multiple evidences per service
     service_map = {}
-    for service, (evidence, _) in selected_findings:
+    for service in selected_services:
+        evidences = [ev for ev, _ in service_findings[service]]
+        combined_evidence = "; ".join(evidences)
         service_map[service] = {
             "service": service,
-            "evidence": evidence
+            "evidence": combined_evidence
         }
 
     return service_map

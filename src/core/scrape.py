@@ -153,28 +153,37 @@ async def scrape_single_lead(db: Session, lead_id: int) -> Dict[str, Any]:
     screenshot_filename = f"{lead.id}.png"
     screenshot_path = os.path.join(SCREENSHOTS_DIR, screenshot_filename)
     
-    # Track details for DB Scrapes row
+    use_playwright_success = False
+    html = ""
+    http_status = 200
+    playwright_error_msg = ""
     scraped_pages = {}
     rendered_text_parts = []
     
-    async with scrape_semaphore:
-        async with async_playwright() as p:
-            # Launch browser
-            browser = await p.chromium.launch(headless=True)
-            context = await browser.new_context(
-                viewport={"width": 1280, "height": 800},
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-                ignore_https_errors=True
-            )
-            page = await context.new_page()
-            
-            try:
-                # Scrape Homepage
+    # 1. Try scraping with Playwright Chromium (aborting images/media/fonts for speed)
+    try:
+        async with scrape_semaphore:
+            async with async_playwright() as p:
+                browser = await p.chromium.launch(headless=True)
+                context = await browser.new_context(
+                    viewport={"width": 1280, "height": 800},
+                    user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+                    ignore_https_errors=True
+                )
+                page = await context.new_page()
+                
+                # Abort heavy assets to prevent timeouts on large sites like babson.edu
+                async def block_resources(route):
+                    if route.request.resource_type in ["image", "media", "font"]:
+                        await route.abort()
+                    else:
+                        await route.continue_()
+                await page.route("**/*", block_resources)
+                
                 timeout = settings.scrape.timeout_ms
                 homepage_response = await page.goto(url, wait_until="load", timeout=timeout)
                 http_status = homepage_response.status if homepage_response else 200
                 
-                # Check for error status codes (e.g. 4xx, 5xx)
                 if http_status >= 400:
                     raise Exception(f"HTTP error status: {http_status}")
                     
@@ -190,66 +199,107 @@ async def scrape_single_lead(db: Session, lead_id: int) -> Dict[str, Any]:
                 # Discover subpages
                 subpages = discover_internal_links(url, html, settings.scrape.max_pages)
                 
-                # Scrape subpages sequentially to avoid overloading the site
+                # Scrape subpages sequentially
                 for sub_url in subpages:
-                    await asyncio.sleep(0.5) # short buffer
+                    await asyncio.sleep(0.5)
                     try:
                         sub_status, sub_text = await scrape_page_content(page, sub_url, timeout)
                         rendered_text_parts.append(sub_text)
                         scraped_pages[sub_url] = {"status": sub_status, "type": "subpage"}
-                    except Exception as e:
-                        scraped_pages[sub_url] = {"status": None, "error": str(e), "type": "subpage"}
+                    except Exception as sub_err:
+                        scraped_pages[sub_url] = {"status": None, "error": str(sub_err), "type": "subpage"}
                 
-                # Combine and truncate text
-                combined_text = "\n\n".join(rendered_text_parts)
-                truncated_text = combined_text[:settings.scrape.max_text_chars]
-                
-                # Save Scrape record to DB
-                scrape_row = db.query(Scrape).filter(Scrape.lead_id == lead.id).first()
-                if not scrape_row:
-                    scrape_row = Scrape(lead_id=lead.id)
-                    db.add(scrape_row)
-                    
-                scrape_row.rendered_text = truncated_text
-                scrape_row.html_content = html
-                scrape_row.screenshot_path = screenshot_path
-                scrape_row.pages_scraped = scraped_pages
-                scrape_row.http_status = http_status
-                scrape_row.reachable = True
-                scrape_row.scraped_at = datetime.utcnow() if hasattr(datetime, "utcnow") else time.time()
-                scrape_row.error = None
-                
-                # Update Lead status
-                lead.status = "scraped"
-                lead.error_message = None
-                db.commit()
-                
-                return {"success": True, "lead_id": lead.id, "pages": len(scraped_pages)}
-                
-            except Exception as e:
-                # Capture failure
-                scrape_row = db.query(Scrape).filter(Scrape.lead_id == lead.id).first()
-                if not scrape_row:
-                    scrape_row = Scrape(lead_id=lead.id)
-                    db.add(scrape_row)
-                    
-                scrape_row.rendered_text = None
-                scrape_row.html_content = None
-                scrape_row.screenshot_path = None
-                scrape_row.pages_scraped = scraped_pages
-                scrape_row.http_status = None
-                scrape_row.reachable = False
-                scrape_row.scraped_at = datetime.utcnow() if hasattr(datetime, "utcnow") else time.time()
-                scrape_row.error = str(e)
-                
-                lead.status = "failed"
-                lead.error_message = f"Scrape error: {str(e)}"
-                db.commit()
-                
-                return {"success": False, "lead_id": lead.id, "error": str(e)}
-            finally:
                 await context.close()
                 await browser.close()
+                use_playwright_success = True
+    except Exception as pw_err:
+        playwright_error_msg = str(pw_err)
+        logger.warning("Playwright crawler failed, attempting HTTPX fallback", url=url, error=playwright_error_msg)
+        
+    # 2. Fall back to httpx if Playwright failed
+    if not use_playwright_success:
+        try:
+            import httpx
+            from bs4 import BeautifulSoup
+            
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+            }
+            
+            target_url = url
+            # Attempt httpx GET call (ignoring cert errors)
+            async with httpx.AsyncClient(timeout=15.0, follow_redirects=True, verify=False) as client:
+                try:
+                    resp = await client.get(target_url, headers=headers)
+                except Exception as get_err:
+                    # If it failed on HTTPS, try HTTP fallback
+                    if target_url.startswith("https://"):
+                        fallback_url = target_url.replace("https://", "http://", 1)
+                        logger.info("HTTPS fetch failed, trying HTTP fallback", url=target_url, fallback_url=fallback_url)
+                        resp = await client.get(fallback_url, headers=headers)
+                    else:
+                        raise get_err
+                
+                http_status = resp.status_code
+                if http_status >= 400:
+                    raise Exception(f"HTTP fallback error status: {http_status}")
+                    
+                html = resp.text
+                soup = BeautifulSoup(html, "lxml")
+                # Remove unneeded elements
+                for element in soup(["script", "style", "noscript"]):
+                    element.decompose()
+                homepage_text = soup.get_text(separator="\n")
+                rendered_text_parts.append(homepage_text or "")
+                scraped_pages[url] = {"status": http_status, "type": "homepage_fallback"}
+                screenshot_path = None # No screenshot available in fallback
+        except Exception as httpx_err:
+            logger.error("HTTP fallback crawler also failed", url=url, error=str(httpx_err))
+            
+            # Save final failure details
+            scrape_row = db.query(Scrape).filter(Scrape.lead_id == lead.id).first()
+            if not scrape_row:
+                scrape_row = Scrape(lead_id=lead.id)
+                db.add(scrape_row)
+                
+            scrape_row.rendered_text = None
+            scrape_row.html_content = None
+            scrape_row.screenshot_path = None
+            scrape_row.pages_scraped = scraped_pages
+            scrape_row.http_status = None
+            scrape_row.reachable = False
+            scrape_row.scraped_at = datetime.utcnow() if hasattr(datetime, "utcnow") else time.time()
+            scrape_row.error = f"Playwright: {playwright_error_msg} | HTTPX: {str(httpx_err)}"
+            
+            lead.status = "failed"
+            lead.error_message = f"Scrape error: Playwright failed ({playwright_error_msg}) and HTTPX fallback failed ({str(httpx_err)})"
+            db.commit()
+            
+            return {"success": False, "lead_id": lead.id, "error": str(httpx_err)}
+
+    # If we got the content (either via Playwright or HTTPX):
+    combined_text = "\n\n".join(rendered_text_parts)
+    truncated_text = combined_text[:settings.scrape.max_text_chars]
+    
+    scrape_row = db.query(Scrape).filter(Scrape.lead_id == lead.id).first()
+    if not scrape_row:
+        scrape_row = Scrape(lead_id=lead.id)
+        db.add(scrape_row)
+        
+    scrape_row.rendered_text = truncated_text
+    scrape_row.html_content = html
+    scrape_row.screenshot_path = screenshot_path
+    scrape_row.pages_scraped = scraped_pages
+    scrape_row.http_status = http_status
+    scrape_row.reachable = True
+    scrape_row.scraped_at = datetime.utcnow() if hasattr(datetime, "utcnow") else time.time()
+    scrape_row.error = None
+    
+    lead.status = "scraped"
+    lead.error_message = None
+    db.commit()
+    
+    return {"success": True, "lead_id": lead.id, "pages": len(scraped_pages)}
 
 async def run_scraper(db: Session, limit: Optional[int] = None, progress_callback = None) -> Dict[str, int]:
     """

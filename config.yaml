@@ -19,12 +19,12 @@ csv:
 email:
   cta: reply to this email
   model: gpt-4o
-  physical_address: 123 Main St, Anytown, USA
+  physical_address: 100 Pine Street, Suite 1250, San Francisco, CA 94111
   provider: openai
   sender_company: Acme Agency
   sender_name: John Doe
   temperature: 0.4
-  unsubscribe_base_url: http://localhost:8000/unsubscribe
+  unsubscribe_base_url: http://127.0.0.1:8000/unsubscribe
 jobs:
   backend: inprocess
   max_concurrent_jobs: 1
@@ -42,4 +42,4 @@ send:
   provider: gmail
   require_human_review: true
 service_map:
-  max_findings: 3
+  max_findings: 6

@@ -67,6 +67,21 @@ Beta Agency,beta-agency.net,contact@beta-agency.net,Jane Smith
 
 Once leads are imported, they enter the `imported` state and are ready for web audits.
 
+### The Autopilot Run: "Run Entire Pipeline" (Recommended)
+If you want to run the entire pipeline for all pending leads in a single click rather than triggering and waiting for each stage separately:
+1. Navigate to the **Dashboard** page.
+2. In the **Quick Actions Control** panel, locate the glowing **Run Entire Pipeline** button (marked with a Sparkle icon and the "All-in-One" badge).
+3. Click the button to trigger the composite `pipeline` job.
+4. The web app will automatically redirect you to the **Background Jobs** execution logs.
+5. In the jobs list, select your running job (`PIPELINE`) to stream the real-time stage progress:
+   - **Step 1/3:** Scraping website content via Playwright.
+   - **Step 2/3:** Analyzing metadata, viewport, trackers, forms, PageSpeed, and mapping findings.
+   - **Step 3/3:** Generating and validating grounded LLM email drafts.
+
+Once the job status transitions to `COMPLETED` (3/3 units), your leads will be in the `drafted` state and ready for manual review in the **Review Queue** tab.
+
+---
+
 ### Step 1: Website Scraping (Playwright Crawler)
 1. Trigger the scraper by navigating to the **Background Jobs** tab, select `scrape` from the job type list, and click **Launch Job**.
    * *CLI Alternative:* `.venv\Scripts\python -m src.main scrape`
@@ -161,7 +176,7 @@ Compare outputs from different LLM providers (Anthropic Claude, OpenAI GPT, Goog
 
 ## 7. The Automated End-to-End Execution Flow
 
-To run the entire pipeline without clicking through individual pages in the web dashboard, you can trigger automated scripts.
+To run the entire pipeline without clicking through individual pages or triggering each stage manually, you can either click the **Run Entire Pipeline** button on the **Dashboard** page (which executes the background scraper, analysis, and email generation consecutively), or run command-line automation scripts.
 
 ### How the Automated Flow Works
 The automation scripts orchestrate the pipeline stages in sequence:

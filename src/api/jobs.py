@@ -49,7 +49,7 @@ async def execute_job(job_id: int):
     db.commit()
 
     # Create progress callback
-    async def progress_callback(done: int, total: int):
+    async def progress_callback(done: int, total: int, message: Optional[str] = None):
         # We need a separate session or local refresh to prevent transaction lockups
         local_db = SessionLocal()
         try:
@@ -67,6 +67,7 @@ async def execute_job(job_id: int):
                     "status": "running",
                     "done": done,
                     "total": total,
+                    "message": message,
                     "error": None
                 })
         except Exception as e:
@@ -114,6 +115,30 @@ async def execute_job(job_id: int):
             await progress_callback(1, 1)
             job.done = 1
             job.total = 1
+        elif job.type == "pipeline":
+            # Stage 1: Scrape
+            logger.info("Pipeline Step 1/3: Running website scraper...", job_id=job_id)
+            await progress_callback(0, 3, "Step 1/3: Scraping pending website content...")
+            await run_scraper(db, limit=limit)
+            
+            # Stage 2: Analyze
+            logger.info("Pipeline Step 2/3: Running website analysis...", job_id=job_id)
+            await progress_callback(1, 3, "Step 2/3: Analyzing crawled sites & metadata...")
+            await run_analysis(db, limit=limit)
+            
+            # Stage 3: Generate
+            logger.info("Pipeline Step 3/3: Running email generation...", job_id=job_id)
+            await progress_callback(2, 3, "Step 3/3: Drafting cold emails with grounding validation...")
+            model = params.get("model")
+            provider = params.get("provider")
+            await run_email_generation(
+                db, limit=limit, model_override=model, 
+                provider_override=provider
+            )
+            
+            await progress_callback(3, 3, "Pipeline complete! Drafts generated successfully.")
+            job.done = 3
+            job.total = 3
         else:
             raise ValueError(f"Unknown pipeline job type: {job.type}")
 
