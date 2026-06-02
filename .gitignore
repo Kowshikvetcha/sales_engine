@@ -30,7 +30,8 @@ frontend/npm-debug.log*
 # Secret tokens and local configurations
 .env
 .env.local
-secrets/gmail_token.json
+secrets/
+
 
 # IDE settings
 .vscode/
